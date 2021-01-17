@@ -1,3 +1,4 @@
 # gb-go-architecture
 
-This is a example project of shop backend
+домашнее задание 1
+студент - Цокало Жан
