@@ -124,6 +124,7 @@ func (m *mapDB) GetOrder(ID int32) (*models.Order, error) {
 	return &models.Order{
 		ID:      order.ID,
 		Phone:   order.Phone,
+		Email:   order.Email,
 		ItemIDs: order.ItemIDs,
 	}, nil
 }

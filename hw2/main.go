@@ -1,26 +1,41 @@
 package main
 
 import (
+	"flag"
 	"log"
 	"net/http"
 	"time"
 
 	"github.com/gorilla/mux"
 
+	"shop/pkg/mailsender"
 	"shop/pkg/tgbot"
 	"shop/repository"
 	"shop/service"
 )
 
 func main() {
-	tg, err := tgbot.NewTelegramAPI("1561350817:AAH5bkKOgg9MRqAJLV-QTRFzIbrSUnjWoK8", -432234189)
+	var token = flag.String("token", "", "telegram bot token")
+	var chatID = flag.Int64("chat", 0, "telegram chat id")
+	var server = flag.String("server", "smtp.mail.ru", "notification smtp server address")
+	var sender = flag.String("sender", "", "notification sender email address")
+	var password = flag.String("password", "", "notification sender password")
+
+	flag.Parse()
+
+	tg, err := tgbot.NewTelegramAPI(*token, *chatID)
 	if err != nil {
 		log.Fatal("Unable to init telegram bot")
 	}
 
+	ms, err := mailsender.NewMailAPI(*server, *sender, *password)
+	if err != nil {
+		log.Fatal("Unable to init mail sender")
+	}
+
 	db := repository.NewMapDB()
 
-	service := service.NewService(tg, db)
+	service := service.NewService(tg, ms, db)
 	handler := &shopHandler{
 		service: service,
 		db:      db,
@@ -43,6 +58,7 @@ func main() {
 		IdleTimeout:  time.Second * 60,
 		Handler:      router,
 	}
+	log.Println("the server is running...")
 	err = srv.ListenAndServe()
 	if err != nil {
 		log.Fatal(err)
