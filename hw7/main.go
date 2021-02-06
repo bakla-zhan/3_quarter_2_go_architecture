@@ -9,6 +9,7 @@ import (
 	"github.com/gorilla/mux"
 
 	"shop/middlewares"
+	"shop/pkg/httpclient"
 	"shop/pkg/mailsender"
 	"shop/pkg/tgbot"
 	"shop/repository"
@@ -34,9 +35,14 @@ func main() {
 		log.Fatal("Unable to init mail sender")
 	}
 
+	wc, err := httpclient.NewWebAPI1C("http://server1C.local/web:8080")
+	if err != nil {
+		log.Fatal("Unable to init http client")
+	}
+
 	db := repository.NewMapDB()
 
-	service := service.NewService(tg, ms, db)
+	service := service.NewService(tg, ms, wc, db)
 	handler := &shopHandler{
 		service: service,
 		db:      db,
