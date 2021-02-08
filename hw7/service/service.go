@@ -6,6 +6,7 @@ import (
 	"log"
 
 	"shop/models"
+	wc "shop/pkg/httpclient"
 	mail "shop/pkg/mailsender"
 	tg "shop/pkg/tgbot"
 	rep "shop/repository"
@@ -19,6 +20,7 @@ type Service interface {
 type service struct {
 	tg tg.TelegramAPI
 	ms mail.MailAPI
+	wc wc.WebAPI1C
 	db rep.Repository
 }
 
@@ -40,6 +42,10 @@ func (s *service) CreateOrder(ctx context.Context, order *models.Order) (*models
 	if err := s.ms.SendOrderNotification(order); err != nil {
 		log.Println("Error SendMail: ", err)
 	}
+	if err := s.wc.SendOrderTo1CWebAPI(ctx, order); err != nil {
+		log.Println("Error 1C web API: ", err)
+	}
+
 	return order, err
 }
 
@@ -54,10 +60,11 @@ func (s *service) CreateItem(ctx context.Context, item *models.Item) (*models.It
 	return s.db.CreateItem(ctx, item)
 }
 
-func NewService(tg tg.TelegramAPI, ms mail.MailAPI, db rep.Repository) Service {
+func NewService(tg tg.TelegramAPI, ms mail.MailAPI, wc wc.WebAPI1C, db rep.Repository) Service {
 	return &service{
 		db: db,
 		tg: tg,
 		ms: ms,
+		wc: wc,
 	}
 }
